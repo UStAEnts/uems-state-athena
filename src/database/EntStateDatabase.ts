@@ -1,16 +1,15 @@
 import { Collection, FilterQuery, ObjectID, ObjectId } from "mongodb";
 import { GenericMongoDatabase } from "@uems/micro-builder";
-import { EntStateMessage } from "@uems/uemscommlib";
+import { EntStateMessage, EntStateResponse } from "@uems/uemscommlib";
 import ReadEntStateMessage = EntStateMessage.ReadEntStateMessage;
-import { EntStateValidators } from "@uems/uemscommlib/build/ent/EntStateValidators";
-import EntStateRepresentation = EntStateValidators.EntStateRepresentation;
 import CreateEntStateMessage = EntStateMessage.CreateEntStateMessage;
 import DeleteEntStateMessage = EntStateMessage.DeleteEntStateMessage;
 import UpdateEntStateMessage = EntStateMessage.UpdateEntStateMessage;
+import InternalEntState = EntStateResponse.InternalEntState;
 
-export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, CreateEntStateMessage, DeleteEntStateMessage, UpdateEntStateMessage, EntStateRepresentation> {
+export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, CreateEntStateMessage, DeleteEntStateMessage, UpdateEntStateMessage, InternalEntState> {
 
-    private static convertReadRequestToDatabaseQuery(request: ReadEntStateMessage): FilterQuery<EntStateRepresentation> {
+    private static convertReadRequestToDatabaseQuery(request: ReadEntStateMessage): FilterQuery<InternalEntState> {
         const obj: any = {
             color: request.color,
             icon: request.icon,
@@ -50,8 +49,8 @@ export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, 
         return super.defaultDelete(remove);
     }
 
-    protected async queryImpl(query: EntStateMessage.ReadEntStateMessage, details: Collection): Promise<EntStateValidators.EntStateRepresentation[]> {
-        const result: EntStateRepresentation[] = await details.find(EntStateDatabase.convertReadRequestToDatabaseQuery(query)).toArray();
+    protected async queryImpl(query: EntStateMessage.ReadEntStateMessage, details: Collection): Promise<InternalEntState[]> {
+        const result: InternalEntState[] = await details.find(EntStateDatabase.convertReadRequestToDatabaseQuery(query)).toArray();
 
         // Copy _id to id to fit the responsr type.
         for (const r of result) {

@@ -1,16 +1,15 @@
 import { Collection, FilterQuery, ObjectID, ObjectId } from "mongodb";
 import { GenericMongoDatabase } from "@uems/micro-builder";
-import { StateMessage } from "@uems/uemscommlib";
+import { StateMessage, StateResponse } from "@uems/uemscommlib";
 import ReadStateMessage = StateMessage.ReadStateMessage;
 import CreateStateMessage = StateMessage.CreateStateMessage;
 import DeleteStateMessage = StateMessage.DeleteStateMessage;
 import UpdateStateMessage = StateMessage.UpdateStateMessage;
-import { StateValidators } from "@uems/uemscommlib/build/state/StateValidators";
-import StateRepresentation = StateValidators.StateRepresentation;
+import InternalState = StateResponse.InternalState;
 
-export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, CreateStateMessage, DeleteStateMessage, UpdateStateMessage, StateRepresentation> {
+export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, CreateStateMessage, DeleteStateMessage, UpdateStateMessage, InternalState> {
 
-    private static convertReadRequestToDatabaseQuery(request: ReadStateMessage): FilterQuery<StateRepresentation> {
+    private static convertReadRequestToDatabaseQuery(request: ReadStateMessage): FilterQuery<InternalState> {
         const obj: any = {
             color: request.color,
             icon: request.icon,
@@ -50,8 +49,8 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
         return super.defaultDelete(remove);
     }
 
-    protected async queryImpl(query: StateMessage.ReadStateMessage, details: Collection): Promise<StateValidators.StateRepresentation[]> {
-        const result: StateRepresentation[] = await details.find(StateDatabase.convertReadRequestToDatabaseQuery(query)).toArray();
+    protected async queryImpl(query: StateMessage.ReadStateMessage, details: Collection): Promise<InternalState[]> {
+        const result: InternalState[] = await details.find(StateDatabase.convertReadRequestToDatabaseQuery(query)).toArray();
 
         // Copy _id to id to fit the responsr type.
         for (const r of result) {

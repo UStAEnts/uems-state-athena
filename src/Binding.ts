@@ -3,12 +3,7 @@ import { StateDatabase } from "./database/StateDatabase";
 import { _ml } from "./logging/Log";
 import { GenericDatabase, RabbitNetworkHandler } from "@uems/micro-builder";
 import { EntStateDatabase } from "./database/EntStateDatabase";
-import { EntStateValidators } from "@uems/uemscommlib/build/ent/EntStateValidators";
-import EntStateMessageValidator = EntStateValidators.EntStateMessageValidator;
-import { StateValidators } from "@uems/uemscommlib/build/state/StateValidators";
-import StateMessageValidator = StateValidators.StateMessageValidator;
-import { MsgStatus } from "@uems/uemscommlib/build/messaging/types/event_response_schema";
-
+import { EntStateMessageValidator, MsgStatus, StateMessageValidator } from '@uems/uemscommlib'
 const _b = _ml(__filename, 'binding');
 
 async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: number },
