@@ -19,6 +19,14 @@ export const MongoDBConfigurationSchema = z.object({
                 changelog: z.string(),
             }),
         }),
+        topic: z.object({
+            server: z.string(),
+            database: z.string(),
+            collections: z.object({
+                details: z.string(),
+                changelog: z.string(),
+            }),
+        }),
         ent: z.object({
             server: z.string(),
             database: z.string(),
