@@ -12,10 +12,12 @@ import { ConfigurationSchema } from "./ConfigurationTypes";
 import {EquipmentMessage as EM, EquipmentResponse as ER} from "@uems/uemscommlib";
 import { EntStateDatabase } from "./database/EntStateDatabase";
 import { RabbitNetworkHandler } from "@uems/micro-builder";
+import { TopicDatabase } from "./database/TopicDatabase";
 
 __.info('starting hephaestus...');
 
 let messager: RabbitNetworkHandler<any, any, any, any, any, any> | undefined;
+let topic: TopicDatabase | undefined;
 let database: StateDatabase | undefined;
 let entDatabase: EntStateDatabase | undefined;
 let configuration: z.infer<typeof ConfigurationSchema> | undefined;
@@ -45,6 +47,17 @@ fs.readFile(path.join(__dirname, '..', 'config', 'configuration.json'), { encodi
             collections: configuration.database.instance.state.collections,
             database: configuration.database.instance.state.database,
             server: configuration.database.instance.state.server,
+        });
+        topic = new TopicDatabase({
+            username: configuration.database.username,
+            password: configuration.database.password,
+            uri: configuration.database.uri,
+            port: configuration.database.port,
+            settings: configuration.database.settings,
+
+            collections: configuration.database.instance.topic.collections,
+            database: configuration.database.instance.topic.database,
+            server: configuration.database.instance.topic.server,
         });
         entDatabase = new EntStateDatabase({
             username: configuration.database.username,
@@ -112,14 +125,14 @@ fs.readFile(path.join(__dirname, '..', 'config', 'configuration.json'), { encodi
         });
     })))
     .then(() => {
-        if (!messager || !database || !entDatabase) {
+        if (!messager || !database || !entDatabase || !topic) {
             __.error('reached an uninitialised database or messenger, this should not be possible');
             throw new Error('uninitialised database or messenger');
         }
 
         __.info('binding database to messenger');
 
-        bind(database, entDatabase, messager);
+        bind(database, entDatabase, topic, messager);
 
         // We're ready to start!
         __.info('hera up and running');
