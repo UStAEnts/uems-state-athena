@@ -4,6 +4,9 @@ import { _ml } from "./logging/Log";
 import { GenericDatabase, RabbitNetworkHandler } from "@uems/micro-builder";
 import { EntStateDatabase } from "./database/EntStateDatabase";
 import { EntStateMessageValidator, MsgStatus, StateMessageValidator } from '@uems/uemscommlib'
+import { TopicValidators } from "@uems/uemscommlib/build/topic/TopicValidators";
+import TopicMessageValidator = TopicValidators.TopicMessageValidator;
+import { TopicDatabase } from "./database/TopicDatabase";
 const _b = _ml(__filename, 'binding');
 
 async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: number },
@@ -69,13 +72,16 @@ async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: n
 
 const entValidator = new EntStateMessageValidator();
 const stateValidator = new StateMessageValidator();
+const topicValidator = new TopicMessageValidator();
 
-export default function bind(state: StateDatabase, ent: EntStateDatabase, broker: RabbitNetworkHandler<any, any, any, any, any, any>): void {
+export default function bind(state: StateDatabase, ent: EntStateDatabase, topic: TopicDatabase, broker: RabbitNetworkHandler<any, any, any, any, any, any>): void {
     broker.on('query', async (message, send, routingKey) => {
         if (routingKey.startsWith("ents.") && await entValidator.validate(message)) {
             return executeGeneric(message, ent, send);
         } else if (routingKey.startsWith("states.") && await stateValidator.validate(message)) {
             return executeGeneric(message, state, send);
+        } else if (routingKey.startsWith("topics.") && await topicValidator.validate(message)) {
+            return executeGeneric(message, topic, send);
         }
 
         console.log(message, routingKey);
@@ -96,6 +102,8 @@ export default function bind(state: StateDatabase, ent: EntStateDatabase, broker
             return executeGeneric(message, ent, send);
         } else if (routingKey.startsWith("states.") && await stateValidator.validate(message)) {
             return executeGeneric(message, state, send)
+        } else if (routingKey.startsWith("topics.") && await topicValidator.validate(message)) {
+            return executeGeneric(message, topic, send);
         }
 
         send({
@@ -114,6 +122,8 @@ export default function bind(state: StateDatabase, ent: EntStateDatabase, broker
             return executeGeneric(message, ent, send);
         } else if (routingKey.startsWith("states.") && await stateValidator.validate(message)) {
             return executeGeneric(message, state, send)
+        } else if (routingKey.startsWith("topics.") && await topicValidator.validate(message)) {
+            return executeGeneric(message, topic, send);
         }
 
         send({
@@ -132,6 +142,8 @@ export default function bind(state: StateDatabase, ent: EntStateDatabase, broker
             return executeGeneric(message, ent, send);
         } else if (routingKey.startsWith("states.") && await stateValidator.validate(message)) {
             return executeGeneric(message, state, send);
+        } else if (routingKey.startsWith("topics.") && await topicValidator.validate(message)) {
+            return executeGeneric(message, topic, send);
         }
 
         send({
