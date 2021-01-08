@@ -15,6 +15,7 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
             icon: request.icon,
             name: request.name,
             description: request.description,
+            type: 'topic',
         };
 
         if (request.id) {
@@ -33,6 +34,7 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
             icon: document.icon,
             name: document.name,
             description: document.description,
+            type: 'topic',
         });
 
         if (result.insertedCount !== 1 || result.insertedId === undefined) {
@@ -59,6 +61,9 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
 
             // @ts-ignore
             delete r._id;
+            // This is how we differentiate the types
+            // @ts-ignore
+            delete r.type;
         }
 
         return result;
