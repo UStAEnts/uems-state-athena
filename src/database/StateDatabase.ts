@@ -40,13 +40,13 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
         }
 
         const id = (result.insertedId as ObjectId).toHexString();
-        await super.log(id, 'inserted');
+        await this.log(id, 'inserted');
 
         return [id];
     }
 
     protected deleteImpl(remove: StateMessage.DeleteStateMessage): Promise<string[]> {
-        return super.defaultDelete(remove);
+        return this.defaultDelete(remove);
     }
 
     protected async queryImpl(query: StateMessage.ReadStateMessage, details: Collection): Promise<InternalState[]> {
@@ -68,7 +68,7 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
     }
 
     protected updateImpl(update: StateMessage.UpdateStateMessage): Promise<string[]> {
-        return super.defaultUpdate(update)
+        return this.defaultUpdate(update)
     }
 
 }

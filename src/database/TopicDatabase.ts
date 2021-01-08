@@ -40,13 +40,13 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
         }
 
         const id = (result.insertedId as ObjectId).toHexString();
-        await super.log(id, 'inserted');
+        await this.log(id, 'inserted');
 
         return [id];
     }
 
     protected deleteImpl(remove: TopicMessage.DeleteTopicMessage): Promise<string[]> {
-        return super.defaultDelete(remove);
+        return this.defaultDelete(remove);
     }
 
     protected async queryImpl(query: TopicMessage.ReadTopicMessage, details: Collection): Promise<InternalTopic[]> {
@@ -65,7 +65,7 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
     }
 
     protected updateImpl(update: TopicMessage.UpdateTopicMessage): Promise<string[]> {
-        return super.defaultUpdate(update)
+        return this.defaultUpdate(update)
     }
 
 }
