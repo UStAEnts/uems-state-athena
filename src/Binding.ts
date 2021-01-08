@@ -9,9 +9,9 @@ import TopicMessageValidator = TopicValidators.TopicMessageValidator;
 import { TopicDatabase } from "./database/TopicDatabase";
 const _b = _ml(__filename, 'binding');
 
-async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: number },
+async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: number, userID: string },
     DATABASE extends GenericDatabase<any, any, any, any, REPR>,
-    RESPONSE extends (MESSAGE & { status: number, result: string[] | REPR[] }),
+    RESPONSE extends (MESSAGE & { status: number, result: string[] | REPR[], userID: string }),
     REPR>(
     message: MESSAGE,
     database: DATABASE | undefined,
@@ -59,6 +59,7 @@ async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: n
             msg_id: message.msg_id,
             status,
             result: result,
+            userID: message.userID,
         } as RESPONSE);
     } else {
         send({
@@ -66,6 +67,7 @@ async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: n
             msg_id: message.msg_id,
             status,
             result: result,
+            userID: message.userID,
         } as RESPONSE);
     }
 }
