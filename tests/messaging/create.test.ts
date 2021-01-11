@@ -2,9 +2,9 @@ import { defaultAfterAll, defaultAfterEach, defaultBeforeAll, defaultBeforeEach,
 import { EntStateDatabase } from "../../src/database/EntStateDatabase";
 import { Db, MongoClient, ObjectId } from "mongodb";
 import { BaseSchema } from "@uems/uemscommlib/build/BaseSchema";
-import Intentions = BaseSchema.Intentions;
 import { TopicDatabase } from "../../src/database/TopicDatabase";
 import { StateDatabase } from "../../src/database/StateDatabase";
+import Intentions = BaseSchema.Intentions;
 
 const empty = <T extends Intentions>(intention: T): { msg_intention: T, msg_id: 0, status: 0, userID: string } => ({
     msg_intention: intention,
@@ -78,6 +78,26 @@ describe('create messages of states', () => {
             expect(query[0].name).toEqual('name');
             expect(haveNoAdditionalKeys(query[0], ['name', 'icon', 'color', 'id']));
         });
+
+        it('should reject creation of duplicate state names', async () => {
+            const result = await entStateDB.create({
+                ...empty('CREATE'),
+                name: 'name',
+                icon: 'icon',
+                color: 'color',
+            });
+
+            expect(result).toHaveLength(1);
+            expect(typeof (result[0]) === 'string').toBeTruthy();
+            expect(ObjectId.isValid(result[0])).toBeTruthy();
+
+            await expect(entStateDB.create({
+                ...empty('CREATE'),
+                name: 'name',
+                icon: 'icon',
+                color: 'color',
+            })).rejects.toThrowError('duplicate ent state');
+        });
     });
 
     describe('topics', () => {
@@ -130,6 +150,30 @@ describe('create messages of states', () => {
             expect(query[0].name).toEqual('name');
             expect(haveNoAdditionalKeys(query[0], ['name', 'icon', 'color', 'id', 'description']));
         });
+
+        it('should reject creation of duplicate state names', async () => {
+            const result = await topicsDB.create({
+                ...empty('CREATE'),
+                name: 'name',
+                icon: 'icon',
+                color: 'color',
+                // @ts-ignore
+                addProp: 'one',
+                something: 'else',
+            });
+
+            expect(result).toHaveLength(1);
+            expect(typeof (result[0]) === 'string').toBeTruthy();
+            expect(ObjectId.isValid(result[0])).toBeTruthy();
+
+            await expect(topicsDB.create({
+                ...empty('CREATE'),
+                name: 'name',
+                icon: 'icon',
+                color: 'color',
+                description: '',
+            })).rejects.toThrowError('duplicate topic');
+        });
     });
 
     describe('state', () => {
@@ -180,6 +224,69 @@ describe('create messages of states', () => {
             expect(query[0].name).toEqual('name');
             expect(haveNoAdditionalKeys(query[0], ['name', 'icon', 'color', 'id']));
         });
+
+        it('should reject creation of duplicate state names', async () => {
+            const result = await stateDB.create({
+                ...empty('CREATE'),
+                name: 'name',
+                icon: 'icon',
+                color: 'color',
+            });
+
+            expect(result).toHaveLength(1);
+            expect(typeof (result[0]) === 'string').toBeTruthy();
+            expect(ObjectId.isValid(result[0])).toBeTruthy();
+
+            await expect(stateDB.create({
+                ...empty('CREATE'),
+                name: 'name',
+                icon: 'icon',
+                color: 'color',
+                // @ts-ignore
+                addProp: 'one',
+                something: 'else',
+            })).rejects.toThrowError('duplicate state');
+        });
     });
+
+    describe('all', () => {
+        let stateDB: StateDatabase;
+        let topicDB: TopicDatabase;
+        let entStateDB: EntStateDatabase;
+
+        beforeAll(() => {
+            stateDB = new StateDatabase(db, {
+                changelog: 'changelog',
+                details: 'details',
+            });
+            topicDB = new TopicDatabase(db, {
+                changelog: 'changelog',
+                details: 'details',
+            });
+            entStateDB = new EntStateDatabase(db, {
+                changelog: 'changelog',
+                details: 'details',
+            });
+        })
+
+        it('should allow topic, state and ent state of the same name', async () => {
+            const stateCreate = await stateDB.create({ ...empty('CREATE'), name: 'duplicate', icon: '', color: '' });
+            const entCreate = await entStateDB.create({ ...empty('CREATE'), name: 'duplicate', icon: '', color: '' });
+            const topicCreate = await topicDB.create({
+                ...empty('CREATE'),
+                name: 'duplicate',
+                icon: '',
+                color: '',
+                description: ''
+            });
+
+            expect(stateCreate).toHaveLength(1);
+            expect(entCreate).toHaveLength(1);
+            expect(topicCreate).toHaveLength(1);
+            expect(ObjectId.isValid(stateCreate[0])).toBeTruthy();
+            expect(ObjectId.isValid(entCreate[0])).toBeTruthy();
+            expect(ObjectId.isValid(topicCreate[0])).toBeTruthy();
+        });
+    })
 
 });
