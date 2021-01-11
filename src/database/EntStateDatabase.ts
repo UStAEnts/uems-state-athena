@@ -75,7 +75,7 @@ export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, 
     protected async createImpl(create: EntStateMessage.CreateEntStateMessage, details: Collection): Promise<string[]> {
         return genericCreate(create, createToDB, details, (e) => {
             throw new ClientFacingError('duplicate ent state')
-        })
+        }, this.log.bind(this))
     }
 
     protected deleteImpl(remove: EntStateMessage.DeleteEntStateMessage): Promise<string[]> {
