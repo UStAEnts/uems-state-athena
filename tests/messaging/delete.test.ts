@@ -13,7 +13,7 @@ const empty = <T extends Intentions>(intention: T): { msg_intention: T, msg_id: 
     userID: 'user',
 })
 
-describe('create messages of states', () => {
+describe('delete messages of states', () => {
     let client!: MongoClient;
     let db!: Db;
 
