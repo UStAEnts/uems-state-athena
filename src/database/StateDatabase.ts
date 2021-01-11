@@ -7,6 +7,40 @@ import DeleteStateMessage = StateMessage.DeleteStateMessage;
 import UpdateStateMessage = StateMessage.UpdateStateMessage;
 import InternalState = StateResponse.InternalState;
 import { ClientFacingError } from "../error/ClientFacingError";
+import { genericCreate, genericEntityConversion, genericUpdate } from "./GenericDatabaseFunctions";
+
+type InDatabaseState = {
+    _id: ObjectId,
+    type: 'state',
+    name: string,
+    icon: string,
+    color: string,
+}
+
+type CreateInDatabaseState = Omit<InDatabaseState, '_id'>;
+
+const dbToInternal = (data: InDatabaseState): InternalState => genericEntityConversion(
+    data,
+    {
+        color: 'color',
+        icon: 'icon',
+        name: 'name',
+        _id: 'id',
+    },
+    '_id',
+);
+
+const createToDB = (data: CreateStateMessage): CreateInDatabaseState => ({
+    ...genericEntityConversion(
+        data,
+        {
+            name: 'name',
+            icon: 'icon',
+            color: 'color'
+        }
+    ),
+    type: 'state',
+});
 
 export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, CreateStateMessage, DeleteStateMessage, UpdateStateMessage, InternalState> {
 
@@ -39,33 +73,9 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
     }
 
     protected async createImpl(create: StateMessage.CreateStateMessage, details: Collection): Promise<string[]> {
-        const { msg_id, msg_intention, status, ...document } = create;
-
-        let result;
-
-        try {
-            result = await details.insertOne({
-                color: document.color,
-                icon: document.icon,
-                name: document.name,
-                type: 'state',
-            });
-        } catch (e) {
-            if (e.code === 11000) {
-                throw new ClientFacingError('duplicate state');
-            }
-
-            throw e;
-        }
-
-        if (result.insertedCount !== 1 || result.insertedId === undefined) {
-            throw new Error('failed to insert')
-        }
-
-        const id = (result.insertedId as ObjectId).toHexString();
-        await this.log(id, 'inserted');
-
-        return [id];
+        return genericCreate(create, createToDB, details, (e) => {
+            throw new ClientFacingError('duplicate state')
+        }, this.log.bind(this))
     }
 
     protected deleteImpl(remove: StateMessage.DeleteStateMessage): Promise<string[]> {
@@ -73,25 +83,11 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
     }
 
     protected async queryImpl(query: StateMessage.ReadStateMessage, details: Collection): Promise<InternalState[]> {
-        const result: InternalState[] = await details.find(StateDatabase.convertReadRequestToDatabaseQuery(query)).toArray();
-
-        // Copy _id to id to fit the responsr type.
-        for (const r of result) {
-            // @ts-ignore
-            r.id = r._id.toString();
-
-            // @ts-ignore
-            delete r._id;
-            // This is how we differentiate the types
-            // @ts-ignore
-            delete r.type;
-        }
-
-        return result;
+        return (await details.find(StateDatabase.convertReadRequestToDatabaseQuery(query)).toArray()).map(dbToInternal);
     }
 
-    protected updateImpl(update: StateMessage.UpdateStateMessage): Promise<string[]> {
-        return this.defaultUpdate(update)
+    protected updateImpl(update: StateMessage.UpdateStateMessage, details: Collection): Promise<string[]> {
+        return genericUpdate(update, ['name', 'icon', 'color'], details);
     }
 
 }
