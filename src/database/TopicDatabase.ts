@@ -1,12 +1,49 @@
 import { Collection, Db, FilterQuery, ObjectID, ObjectId } from "mongodb";
 import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder";
 import { TopicMessage, TopicResponse } from "@uems/uemscommlib";
+import { ClientFacingError } from "../error/ClientFacingError";
+import { genericCreate, genericEntityConversion, genericUpdate } from "./GenericDatabaseFunctions";
 import ReadTopicMessage = TopicMessage.ReadTopicMessage;
 import CreateTopicMessage = TopicMessage.CreateTopicMessage;
 import DeleteTopicMessage = TopicMessage.DeleteTopicMessage;
 import UpdateTopicMessage = TopicMessage.UpdateTopicMessage;
 import InternalTopic = TopicResponse.InternalTopic;
-import { ClientFacingError } from "../error/ClientFacingError";
+
+type InDatabaseTopic = {
+    _id: ObjectId,
+    type: 'topic',
+    name: string,
+    icon: string,
+    color: string,
+    description: string,
+}
+
+type CreateInDatabaseEntState = Omit<InDatabaseTopic, '_id'>;
+
+const dbToInternal = (data: InDatabaseTopic): InternalTopic => genericEntityConversion(
+    data,
+    {
+        color: 'color',
+        icon: 'icon',
+        name: 'name',
+        _id: 'id',
+        description: 'description',
+    },
+    '_id',
+);
+
+const createToDB = (data: CreateTopicMessage): CreateInDatabaseEntState => ({
+    ...genericEntityConversion(
+        data,
+        {
+            name: 'name',
+            icon: 'icon',
+            color: 'color',
+            description: 'description',
+        }
+    ),
+    type: 'topic',
+});
 
 export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, CreateTopicMessage, DeleteTopicMessage, UpdateTopicMessage, InternalTopic> {
 
@@ -40,34 +77,9 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
     }
 
     protected async createImpl(create: TopicMessage.CreateTopicMessage, details: Collection): Promise<string[]> {
-        const { msg_id, msg_intention, status, ...document } = create;
-
-        let result;
-
-        try {
-            result = await details.insertOne({
-                color: document.color,
-                icon: document.icon,
-                name: document.name,
-                description: document.description,
-                type: 'topic',
-            });
-        } catch (e) {
-            if (e.code === 11000) {
-                throw new ClientFacingError('duplicate topic');
-            }
-
-            throw e;
-        }
-
-        if (result.insertedCount !== 1 || result.insertedId === undefined) {
-            throw new Error('failed to insert')
-        }
-
-        const id = (result.insertedId as ObjectId).toHexString();
-        await this.log(id, 'inserted');
-
-        return [id];
+        return genericCreate(create, createToDB, details, (e) => {
+            throw new ClientFacingError('duplicate topic');
+        }, this.log.bind(this));
     }
 
     protected deleteImpl(remove: TopicMessage.DeleteTopicMessage): Promise<string[]> {
@@ -75,25 +87,11 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
     }
 
     protected async queryImpl(query: TopicMessage.ReadTopicMessage, details: Collection): Promise<InternalTopic[]> {
-        const result: InternalTopic[] = await details.find(TopicDatabase.convertReadRequestToDatabaseQuery(query)).toArray();
-
-        // Copy _id to id to fit the responsr type.
-        for (const r of result) {
-            // @ts-ignore
-            r.id = r._id.toString();
-
-            // @ts-ignore
-            delete r._id;
-            // This is how we differentiate the types
-            // @ts-ignore
-            delete r.type;
-        }
-
-        return result;
+        return (await details.find(TopicDatabase.convertReadRequestToDatabaseQuery(query)).toArray()).map(dbToInternal);
     }
 
-    protected updateImpl(update: TopicMessage.UpdateTopicMessage): Promise<string[]> {
-        return this.defaultUpdate(update)
+    protected updateImpl(update: TopicMessage.UpdateTopicMessage, details: Collection): Promise<string[]> {
+        return genericUpdate(update, ['name', 'icon', 'color', 'description'], details);
     }
 
 }
