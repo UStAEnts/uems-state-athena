@@ -1,5 +1,5 @@
-import { Collection, FilterQuery, ObjectID, ObjectId } from "mongodb";
-import { GenericMongoDatabase } from "@uems/micro-builder";
+import { Collection, Db, FilterQuery, ObjectID, ObjectId } from "mongodb";
+import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder";
 import { StateMessage, StateResponse } from "@uems/uemscommlib";
 import ReadStateMessage = StateMessage.ReadStateMessage;
 import CreateStateMessage = StateMessage.CreateStateMessage;
@@ -8,6 +8,18 @@ import UpdateStateMessage = StateMessage.UpdateStateMessage;
 import InternalState = StateResponse.InternalState;
 
 export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, CreateStateMessage, DeleteStateMessage, UpdateStateMessage, InternalState> {
+
+
+    constructor(_configuration: MongoDBConfiguration);
+    constructor(_configurationOrDB: MongoDBConfiguration | Db, collections?: MongoDBConfiguration["collections"]);
+    constructor(database: Db, collections: MongoDBConfiguration["collections"]);
+    constructor(_configuration: MongoDBConfiguration | Db, collections?: MongoDBConfiguration["collections"]) {
+        // @ts-ignore
+        super(_configuration, collections);
+
+        if (!this._details) throw new Error('failed to initialise database');
+        void this._details.createIndex({ name: 1, type: 1 }, { unique: true });
+    }
 
     private static convertReadRequestToDatabaseQuery(request: ReadStateMessage): FilterQuery<InternalState> {
         const obj: any = {
