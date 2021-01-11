@@ -1,15 +1,49 @@
-import { Collection, Db, FilterQuery, ObjectID, ObjectId } from "mongodb";
+import { Collection, Db, FilterQuery, ObjectID, ObjectId, UpdateQuery } from "mongodb";
 import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder";
 import { EntStateMessage, EntStateResponse } from "@uems/uemscommlib";
+import { ClientFacingError } from "../error/ClientFacingError";
 import ReadEntStateMessage = EntStateMessage.ReadEntStateMessage;
 import CreateEntStateMessage = EntStateMessage.CreateEntStateMessage;
 import DeleteEntStateMessage = EntStateMessage.DeleteEntStateMessage;
 import UpdateEntStateMessage = EntStateMessage.UpdateEntStateMessage;
 import InternalEntState = EntStateResponse.InternalEntState;
-import { ClientFacingError } from "../error/ClientFacingError";
+import { genericCreate, genericEntityConversion, genericUpdate, stripUndefined } from "./GenericDatabaseFunctions";
+
+type InDatabaseEntState = {
+    _id: ObjectId,
+    type: 'ent',
+    name: string,
+    icon: string,
+    color: string,
+}
+
+type CreateInDatabaseEntState = Omit<InDatabaseEntState, '_id'>;
+
+const dbToInternal2 = (data: InDatabaseEntState): InternalEntState => genericEntityConversion(
+    data,
+    {
+        color: 'color',
+        icon: 'icon',
+        name: 'name',
+        _id: 'id',
+    },
+    '_id',
+);
+
+const createToDB = (data: CreateEntStateMessage): CreateInDatabaseEntState => ({
+    ...genericEntityConversion(
+        data,
+        {
+            name: 'name',
+            icon: 'icon',
+            color: 'color'
+        }
+    ),
+    type: 'ent',
+});
+
 
 export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, CreateEntStateMessage, DeleteEntStateMessage, UpdateEntStateMessage, InternalEntState> {
-
 
     constructor(_configuration: MongoDBConfiguration);
     constructor(_configurationOrDB: MongoDBConfiguration | Db, collections?: MongoDBConfiguration["collections"]);
@@ -23,12 +57,12 @@ export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, 
     }
 
     private static convertReadRequestToDatabaseQuery(request: ReadEntStateMessage): FilterQuery<InternalEntState> {
-        const obj: any = {
+        const obj: any = stripUndefined({
             color: request.color,
             icon: request.icon,
             name: request.name,
             type: 'ent',
-        };
+        });
 
         if (request.id) {
             obj._id = new ObjectID(request.id);
@@ -39,33 +73,9 @@ export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, 
     }
 
     protected async createImpl(create: EntStateMessage.CreateEntStateMessage, details: Collection): Promise<string[]> {
-        const { msg_id, msg_intention, status, ...document } = create;
-
-        let result;
-
-        try {
-            result = await details.insertOne({
-                color: document.color,
-                icon: document.icon,
-                name: document.name,
-                type: 'ent',
-            });
-        } catch (e) {
-            if (e.code === 11000) {
-                throw new ClientFacingError('duplicate ent state');
-            }
-
-            throw e;
-        }
-
-        if (result.insertedCount !== 1 || result.insertedId === undefined) {
-            throw new Error('failed to insert')
-        }
-
-        const id = (result.insertedId as ObjectId).toHexString();
-        await this.log(id, 'inserted');
-
-        return [id];
+        return genericCreate(create, createToDB, details, (e) => {
+            throw new ClientFacingError('duplicate ent state')
+        })
     }
 
     protected deleteImpl(remove: EntStateMessage.DeleteEntStateMessage): Promise<string[]> {
@@ -73,25 +83,11 @@ export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, 
     }
 
     protected async queryImpl(query: EntStateMessage.ReadEntStateMessage, details: Collection): Promise<InternalEntState[]> {
-        const result: InternalEntState[] = await details.find(EntStateDatabase.convertReadRequestToDatabaseQuery(query)).toArray();
-
-        // Copy _id to id to fit the responsr type.
-        for (const r of result) {
-            // @ts-ignore
-            r.id = r._id.toString();
-
-            // @ts-ignore
-            delete r._id;
-            // This is how we differentiate the types
-            // @ts-ignore
-            delete r.type;
-        }
-
-        return result;
+        return (await details.find(EntStateDatabase.convertReadRequestToDatabaseQuery(query)).toArray()).map(dbToInternal2);
     }
 
-    protected updateImpl(update: EntStateMessage.UpdateEntStateMessage): Promise<string[]> {
-        return this.defaultUpdate(update)
+    protected async updateImpl(update: EntStateMessage.UpdateEntStateMessage, details: Collection): Promise<string[]> {
+        return genericUpdate(update, ['name', 'icon', 'color'], details);
     }
 
 }
