@@ -6,6 +6,7 @@ import CreateTopicMessage = TopicMessage.CreateTopicMessage;
 import DeleteTopicMessage = TopicMessage.DeleteTopicMessage;
 import UpdateTopicMessage = TopicMessage.UpdateTopicMessage;
 import InternalTopic = TopicResponse.InternalTopic;
+import { ClientFacingError } from "../error/ClientFacingError";
 
 export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, CreateTopicMessage, DeleteTopicMessage, UpdateTopicMessage, InternalTopic> {
 
@@ -41,13 +42,23 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
     protected async createImpl(create: TopicMessage.CreateTopicMessage, details: Collection): Promise<string[]> {
         const { msg_id, msg_intention, status, ...document } = create;
 
-        const result = await details.insertOne({
-            color: document.color,
-            icon: document.icon,
-            name: document.name,
-            description: document.description,
-            type: 'topic',
-        });
+        let result;
+
+        try {
+            result = await details.insertOne({
+                color: document.color,
+                icon: document.icon,
+                name: document.name,
+                description: document.description,
+                type: 'topic',
+            });
+        } catch (e) {
+            if (e.code === 11000) {
+                throw new ClientFacingError('duplicate topic');
+            }
+
+            throw e;
+        }
 
         if (result.insertedCount !== 1 || result.insertedId === undefined) {
             throw new Error('failed to insert')

@@ -6,6 +6,7 @@ import CreateStateMessage = StateMessage.CreateStateMessage;
 import DeleteStateMessage = StateMessage.DeleteStateMessage;
 import UpdateStateMessage = StateMessage.UpdateStateMessage;
 import InternalState = StateResponse.InternalState;
+import { ClientFacingError } from "../error/ClientFacingError";
 
 export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, CreateStateMessage, DeleteStateMessage, UpdateStateMessage, InternalState> {
 
@@ -40,12 +41,22 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
     protected async createImpl(create: StateMessage.CreateStateMessage, details: Collection): Promise<string[]> {
         const { msg_id, msg_intention, status, ...document } = create;
 
-        const result = await details.insertOne({
-            color: document.color,
-            icon: document.icon,
-            name: document.name,
-            type: 'state',
-        });
+        let result;
+
+        try {
+            result = await details.insertOne({
+                color: document.color,
+                icon: document.icon,
+                name: document.name,
+                type: 'state',
+            });
+        } catch (e) {
+            if (e.code === 11000) {
+                throw new ClientFacingError('duplicate state');
+            }
+
+            throw e;
+        }
 
         if (result.insertedCount !== 1 || result.insertedId === undefined) {
             throw new Error('failed to insert')

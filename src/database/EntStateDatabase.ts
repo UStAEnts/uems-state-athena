@@ -6,6 +6,7 @@ import CreateEntStateMessage = EntStateMessage.CreateEntStateMessage;
 import DeleteEntStateMessage = EntStateMessage.DeleteEntStateMessage;
 import UpdateEntStateMessage = EntStateMessage.UpdateEntStateMessage;
 import InternalEntState = EntStateResponse.InternalEntState;
+import { ClientFacingError } from "../error/ClientFacingError";
 
 export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, CreateEntStateMessage, DeleteEntStateMessage, UpdateEntStateMessage, InternalEntState> {
 
@@ -40,12 +41,22 @@ export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, 
     protected async createImpl(create: EntStateMessage.CreateEntStateMessage, details: Collection): Promise<string[]> {
         const { msg_id, msg_intention, status, ...document } = create;
 
-        const result = await details.insertOne({
-            color: document.color,
-            icon: document.icon,
-            name: document.name,
-            type: 'ent',
-        });
+        let result;
+
+        try {
+            result = await details.insertOne({
+                color: document.color,
+                icon: document.icon,
+                name: document.name,
+                type: 'ent',
+            });
+        } catch (e) {
+            if (e.code === 11000) {
+                throw new ClientFacingError('duplicate ent state');
+            }
+
+            throw e;
+        }
 
         if (result.insertedCount !== 1 || result.insertedId === undefined) {
             throw new Error('failed to insert')
