@@ -87,7 +87,7 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
     }
 
     protected updateImpl(update: StateMessage.UpdateStateMessage, details: Collection): Promise<string[]> {
-        return genericUpdate(update, ['name', 'icon', 'color'], details);
+        return genericUpdate(update, ['name', 'icon', 'color'], details, { type: 'state' });
     }
 
 }

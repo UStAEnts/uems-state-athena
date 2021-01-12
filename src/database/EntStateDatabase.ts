@@ -87,7 +87,7 @@ export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, 
     }
 
     protected async updateImpl(update: EntStateMessage.UpdateEntStateMessage, details: Collection): Promise<string[]> {
-        return genericUpdate(update, ['name', 'icon', 'color'], details);
+        return genericUpdate(update, ['name', 'icon', 'color'], details, { type: 'ent' });
     }
 
 }

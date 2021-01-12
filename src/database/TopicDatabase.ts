@@ -91,7 +91,7 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
     }
 
     protected updateImpl(update: TopicMessage.UpdateTopicMessage, details: Collection): Promise<string[]> {
-        return genericUpdate(update, ['name', 'icon', 'color', 'description'], details);
+        return genericUpdate(update, ['name', 'icon', 'color', 'description'], details, { type: 'topic' });
     }
 
 }

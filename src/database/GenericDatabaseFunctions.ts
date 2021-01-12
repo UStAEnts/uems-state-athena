@@ -1,5 +1,6 @@
 import { Collection, FilterQuery, MongoError, ObjectId, UpdateQuery } from "mongodb";
 import { ClientFacingError } from "../error/ClientFacingError";
+import { add } from "winston";
 
 export const stripUndefined = <T>(data: T): T => Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined)) as unknown as T;
 
@@ -53,9 +54,15 @@ export async function genericCreate<T, V>(
     return [id];
 }
 
-export async function genericUpdate<T extends { id: string }, K extends keyof T>(message: T, keys: K[], details: Collection) {
+export async function genericUpdate<T extends { id: string }, K extends keyof T>(
+    message: T,
+    keys: K[],
+    details: Collection,
+    additionalFilters: any = {},
+) {
     const filter: FilterQuery<any> = {
         _id: new ObjectId(message.id),
+        ...additionalFilters,
     };
 
     const set: Record<string, any> = {};
