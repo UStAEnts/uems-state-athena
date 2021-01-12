@@ -5,26 +5,26 @@ import DeleteUserMessage = UserMessage.DeleteUserMessage;
 import ReadUserMessage = UserMessage.ReadUserMessage;
 import { RabbitNetworkHandler } from "@uems/micro-builder";
 
-interface MockBrokerInterface {
-    on(name: 'query', callback: (message: ReadUserMessage, send: (data: any) => void) => void): void;
+interface MockBrokerInterface<R, D, U, C, M> {
+    on(name: 'query', callback: (message: R, send: (data: any) => void) => void, routingKey: string): void;
 
-    on(name: 'delete', callback: (message: DeleteUserMessage, send: (data: any) => void) => void): void;
+    on(name: 'delete', callback: (message: D, send: (data: any) => void) => void, routingKey: string): void;
 
-    on(name: 'update', callback: (message: UpdateUserMessage, send: (data: any) => void) => void): void;
+    on(name: 'update', callback: (message: U, send: (data: any) => void) => void, routingKey: string): void;
 
-    on(name: 'create', callback: (message: CreateUserMessage, send: (data: any) => void) => void): void;
+    on(name: 'create', callback: (message: C, send: (data: any) => void) => void, routingKey: string): void;
 
-    on(name: 'any', callback: (message: UserMessage.UserMessage, send: (data: any) => void) => void): void;
+    on(name: 'any', callback: (message: M, send: (data: any) => void) => void, routingKey: string): void;
 }
 
-export class BindingBroker implements MockBrokerInterface {
+export class BindingBroker<R, D, U, C, M> implements MockBrokerInterface<R, D, U, C, M> {
 
     private _listeners: {
-        'query': ((message: ReadUserMessage, send: (data: any) => void) => void)[],
-        'delete': ((message: DeleteUserMessage, send: (data: any) => void) => void)[],
-        'update': ((message: UpdateUserMessage, send: (data: any) => void) => void)[],
-        'create': ((message: CreateUserMessage, send: (data: any) => void) => void)[],
-        'any': ((message: UserMessage.UserMessage, send: (data: any) => void) => void)[],
+        'query': ((message: R, send: (data: any) => void) => void)[],
+        'delete': ((message: D, send: (data: any) => void) => void)[],
+        'update': ((message: U, send: (data: any) => void) => void)[],
+        'create': ((message: C, send: (data: any) => void) => void)[],
+        'any': ((message: M, send: (data: any) => void) => void)[],
     } = {
         'query': [],
         'delete': [],
@@ -33,30 +33,31 @@ export class BindingBroker implements MockBrokerInterface {
         'any': [],
     }
 
-    on(name: "query", callback: (message: UserMessage.ReadUserMessage, send: (data: any) => void) => void): void;
-    on(name: "delete", callback: (message: UserMessage.DeleteUserMessage, send: (data: any) => void) => void): void;
-    on(name: "update", callback: (message: UserMessage.UpdateUserMessage, send: (data: any) => void) => void): void;
-    on(name: "create", callback: (message: UserMessage.CreateUserMessage, send: (data: any) => void) => void): void;
-    on(name: "any", callback: (message: UserMessage.UserMessage, send: (data: any) => void) => void): void;
-    on(name: "query" | "delete" | "update" | "create" | "any", callback: ((message: UserMessage.ReadUserMessage, send: (data: any) => void) => void) | ((message: UserMessage.DeleteUserMessage, send: (data: any) => void) => void) | ((message: UserMessage.UpdateUserMessage, send: (data: any) => void) => void) | ((message: UserMessage.CreateUserMessage, send: (data: any) => void) => void) | ((message: UserMessage.UserMessage, send: (data: any) => void) => void)): void {
+    on(name: "query", callback: (message: R, send: (data: any) => void) => void, routingKey: string): void;
+    on(name: "delete", callback: (message: D, send: (data: any) => void) => void, routingKey: string): void;
+    on(name: "update", callback: (message: U, send: (data: any) => void) => void, routingKey: string): void;
+    on(name: "create", callback: (message: C, send: (data: any) => void) => void, routingKey: string): void;
+    on(name: "any", callback: (message: M, send: (data: any) => void) => void, routingKey: string): void;
+    on(name: "query" | "delete" | "update" | "create" | "any", callback: ((message: R, send: (data: any) => void) => void) | ((message: D, send: (data: any) => void) => void) | ((message: U, send: (data: any) => void) => void) | ((message: C, send: (data: any) => void) => void) | ((message: M, send: (data: any) => void) => void), routingKey: string): void {
         // @ts-ignore
         this._listeners[name].push(callback);
     }
 
-    emit(name: "query", message: UserMessage.ReadUserMessage, send: (data: any) => void): void;
-    emit(name: "delete", message: UserMessage.DeleteUserMessage, send: (data: any) => void): void;
-    emit(name: "update", message: UserMessage.UpdateUserMessage, send: (data: any) => void): void;
-    emit(name: "create", message: UserMessage.CreateUserMessage, send: (data: any) => void): void;
-    emit(name: "any", message: UserMessage.UserMessage, send: (data: any) => void): void;
-    emit(name: "query" | 'delete' | 'update' | 'create' | 'any', message: UserMessage.ReadUserMessage | UserMessage.DeleteUserMessage | UserMessage.UpdateUserMessage | UserMessage.CreateUserMessage | UserMessage.UserMessage, send: (data: any) => void) {
+    emit(name: "query", message: R, routingKey: string, send: (data: any) => void): void;
+    emit(name: "delete", message: D, routingKey: string, send: (data: any) => void): void;
+    emit(name: "update", message: U, routingKey: string, send: (data: any) => void): void;
+    emit(name: "create", message: C, routingKey: string, send: (data: any) => void): void;
+    emit(name: "any", message: M, routingKey: string, send: (data: any) => void): void;
+    emit(name: "query" | 'delete' | 'update' | 'create' | 'any', message: R | D | U | C | M, routingKey: string, send: (data: any) => void) {
         // @ts-ignore
-        this._listeners[name].forEach((e) => e(message, send));
+        this._listeners[name].forEach((e) => e(message, send, routingKey));
         if (name !== 'any') {
-            this._listeners.any.forEach((e) => e(message, send));
+            // @ts-ignore
+            this._listeners.any.forEach((e) => e(message, send, routingKey));
         }
     }
 
-    clear(){
+    clear() {
         this._listeners.query = [];
         this._listeners.delete = [];
         this._listeners.update = [];
