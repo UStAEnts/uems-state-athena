@@ -69,7 +69,7 @@ describe('delete messages of states', () => {
 
         it('should reject when deleting with a non-existent id', async () => {
             const id = '56d9bf92f9be48771d6fe5b9';
-            await expect(entStateDB.delete({ ...empty('DELETE'), id })).rejects.toThrowError('failed to delete');
+            await expect(entStateDB.delete({ ...empty('DELETE'), id })).rejects.toThrowError('invalid entity ID');
 
             const query = await entStateDB.query(empty('READ'));
             expect(query).toHaveLength(1);
@@ -109,7 +109,7 @@ describe('delete messages of states', () => {
 
         it('should reject when deleting with a non-existent id', async () => {
             const id = '56d9bf92f9be48771d6fe5b9';
-            await expect(topicsDB.delete({ ...empty('DELETE'), id })).rejects.toThrowError('failed to delete');
+            await expect(topicsDB.delete({ ...empty('DELETE'), id })).rejects.toThrowError('invalid entity ID');
 
             const query = await topicsDB.query(empty('READ'));
             expect(query).toHaveLength(1);
@@ -150,7 +150,7 @@ describe('delete messages of states', () => {
 
         it('should reject when deleting with a non-existent id', async () => {
             const id = '56d9bf92f9be48771d6fe5b9';
-            await expect(stateDB.delete({ ...empty('DELETE'), id })).rejects.toThrowError('failed to delete');
+            await expect(stateDB.delete({ ...empty('DELETE'), id })).rejects.toThrowError('invalid entity ID');
 
             const query = await stateDB.query(empty('READ'));
             expect(query).toHaveLength(1);
