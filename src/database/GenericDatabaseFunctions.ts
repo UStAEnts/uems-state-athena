@@ -59,6 +59,7 @@ export async function genericUpdate<T extends { id: string }, K extends keyof T>
     keys: K[],
     details: Collection,
     additionalFilters: any = {},
+    duplicateHandler?: (e: MongoError) => Promise<void> | void,
 ) {
     const filter: FilterQuery<any> = {
         _id: new ObjectId(message.id),
@@ -79,7 +80,18 @@ export async function genericUpdate<T extends { id: string }, K extends keyof T>
         throw new ClientFacingError('no operations provided');
     }
 
-    const result = await details.updateOne(filter, changes);
+    let result;
+    try {
+        result = await details.updateOne(filter, changes);
+    } catch (e) {
+        if (e.code === 11000) {
+            if (duplicateHandler) await duplicateHandler(e);
+
+            throw new ClientFacingError('duplicate entity provided');
+        }
+
+        throw e;
+    }
 
     if (result.matchedCount === 0) {
         throw new ClientFacingError('invalid entity ID');
