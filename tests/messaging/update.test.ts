@@ -201,6 +201,33 @@ describe('delete messages of states', () => {
                 color: 'color',
             });
         });
+
+        it('should not allow updating to existing names', async () => {
+            await expect(entStateDB.update({
+                ...empty('UPDATE'),
+                id: '56d9bf92f9be48771d6fe5b4',
+                name: 'name dup',
+            })).rejects.toThrowError('cannot update to existing name');
+
+            const query = await entStateDB.query({ ...empty('READ') });
+            expect(query).toHaveLength(2);
+            let find = query.find((e) => e.id === '56d9bf92f9be48771d6fe5b4');
+            expect(find).not.toBeUndefined();
+            expect(find).toEqual({
+                id: '56d9bf92f9be48771d6fe5b4',
+                name: 'name',
+                icon: 'icon',
+                color: 'color',
+            });
+            find = query.find((e) => e.id === '56d9bf92f9be48771d6fe5b5');
+            expect(find).not.toBeUndefined();
+            expect(find).toEqual({
+                id: '56d9bf92f9be48771d6fe5b5',
+                name: 'name dup',
+                icon: 'icon',
+                color: 'color',
+            });
+        })
     });
 
     describe('topic', () => {
@@ -338,6 +365,35 @@ describe('delete messages of states', () => {
                 description: 'description',
             });
         });
+
+        it('should not allow updating to existing names', async () => {
+            await expect(topicsDB.update({
+                ...empty('UPDATE'),
+                id: '56d9bf92f9be48771d6fe5b2',
+                name: 'name dup',
+            })).rejects.toThrowError('cannot update to existing name');
+
+            const query = await topicsDB.query({ ...empty('READ') });
+            expect(query).toHaveLength(2);
+            let find = query.find((e) => e.id === '56d9bf92f9be48771d6fe5b2');
+            expect(find).not.toBeUndefined();
+            expect(find).toEqual({
+                id: '56d9bf92f9be48771d6fe5b2',
+                name: 'name',
+                icon: 'icon',
+                color: 'color',
+                description: 'description',
+            });
+            find = query.find((e) => e.id === '56d9bf92f9be48771d6fe5b7');
+            expect(find).not.toBeUndefined();
+            expect(find).toEqual({
+                id: '56d9bf92f9be48771d6fe5b7',
+                name: 'name dup',
+                icon: 'icon',
+                color: 'color',
+                description: 'description',
+            });
+        })
     });
 
     describe('state', () => {
@@ -464,6 +520,33 @@ describe('delete messages of states', () => {
                 color: 'color',
             });
         });
+
+        it('should not allow updating to existing names', async () => {
+            await expect(stateDB.update({
+                ...empty('UPDATE'),
+                id: '56d9bf92f9be48771d6fe5b3',
+                name: 'name dup',
+            })).rejects.toThrowError('cannot update to existing name');
+
+            const query = await stateDB.query({ ...empty('READ') });
+            expect(query).toHaveLength(2);
+            let find = query.find((e) => e.id === '56d9bf92f9be48771d6fe5b3');
+            expect(find).not.toBeUndefined();
+            expect(find).toEqual({
+                id: '56d9bf92f9be48771d6fe5b3',
+                name: 'name',
+                icon: 'icon',
+                color: 'color',
+            });
+            find = query.find((e) => e.id === '56d9bf92f9be48771d6fe5b6');
+            expect(find).not.toBeUndefined();
+            expect(find).toEqual({
+                id: '56d9bf92f9be48771d6fe5b6',
+                name: 'name dup',
+                icon: 'icon',
+                color: 'color',
+            });
+        })
 
     });
 
