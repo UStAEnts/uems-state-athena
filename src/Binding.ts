@@ -7,6 +7,8 @@ import { EntStateMessageValidator, MsgStatus, StateMessageValidator } from '@uem
 import { TopicValidators } from "@uems/uemscommlib/build/topic/TopicValidators";
 import TopicMessageValidator = TopicValidators.TopicMessageValidator;
 import { TopicDatabase } from "./database/TopicDatabase";
+import { ClientFacingError } from "./error/ClientFacingError";
+
 const _b = _ml(__filename, 'binding');
 
 async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: number, userID: string },
@@ -30,19 +32,19 @@ async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: n
         switch (message.msg_intention) {
             case 'CREATE':
                 result = await database.create(message);
-                status = constants.HTTP_STATUS_OK;
+                status = MsgStatus.SUCCESS;
                 break;
             case 'DELETE':
                 result = await database.delete(message);
-                status = constants.HTTP_STATUS_OK;
+                status = MsgStatus.SUCCESS;
                 break;
             case 'READ':
                 result = await database.query(message);
-                status = constants.HTTP_STATUS_OK;
+                status = MsgStatus.SUCCESS;
                 break;
             case 'UPDATE':
                 result = await database.update(message);
-                status = constants.HTTP_STATUS_OK;
+                status = MsgStatus.SUCCESS;
                 break;
             default:
                 status = constants.HTTP_STATUS_BAD_REQUEST;
@@ -51,6 +53,26 @@ async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: n
         _b.error('failed to query database for events', {
             error: e as unknown,
         });
+
+        if (e instanceof ClientFacingError) {
+            send({
+                userID: message.userID,
+                status: MsgStatus.FAIL,
+                msg_id: message.msg_id,
+                msg_intention: message.msg_intention,
+                result: [e.message],
+            } as RESPONSE);
+            return;
+        } else {
+            send({
+                userID: message.userID,
+                status: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+                msg_id: message.msg_id,
+                msg_intention: message.msg_intention,
+                result: ['internal server error'],
+            } as RESPONSE);
+            return;
+        }
     }
 
     if (message.msg_intention === 'READ') {
