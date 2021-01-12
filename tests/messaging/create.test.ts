@@ -14,10 +14,6 @@ const empty = <T extends Intentions>(intention: T): { msg_intention: T, msg_id: 
 })
 
 describe('create messages of states', () => {
-    // Warning, inflating coverage to include everything to make counts more accurate
-    // TODO: remove these when I test it
-    require('../../src/Binding');
-
     let client!: MongoClient;
     let db!: Db;
 
