@@ -57,16 +57,20 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
 
         if (!this._details) throw new Error('failed to initialise database');
         void this._details.createIndex({ name: 1, type: 1 }, { unique: true });
+        void this._details.createIndex({ name: 'text', description: 'text' });
     }
 
     private static convertReadRequestToDatabaseQuery(request: ReadTopicMessage): FilterQuery<InternalTopic> {
         const obj: any = {
             color: request.color,
             icon: request.icon,
-            name: request.name,
-            description: request.description,
             type: 'topic',
         };
+
+        let text = [];
+        if (request.name) text.push(request.name);
+        if (request.description) text.push(request.description);
+        if (text.length > 0) obj.$text = { $search: text.join(' ') };
 
         if (request.id) {
             obj._id = new ObjectID(request.id);

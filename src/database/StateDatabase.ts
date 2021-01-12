@@ -54,19 +54,21 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
 
         if (!this._details) throw new Error('failed to initialise database');
         void this._details.createIndex({ name: 1, type: 1 }, { unique: true });
+        void this._details.createIndex({ name: 'text', description: 'text' });
     }
 
     private static convertReadRequestToDatabaseQuery(request: ReadStateMessage): FilterQuery<InternalState> {
         const obj: any = {
             color: request.color,
             icon: request.icon,
-            name: request.name,
             type: 'state',
         };
 
         if (request.id) {
             obj._id = new ObjectID(request.id);
         }
+
+        if (request.name) obj.$text = { $search: request.name };
 
         return Object.fromEntries(Object.entries(obj)
             .filter(([, value]) => value !== undefined));
