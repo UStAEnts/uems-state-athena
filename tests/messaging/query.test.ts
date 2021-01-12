@@ -115,7 +115,7 @@ describe('delete messages of states', () => {
             expect(haveNoAdditionalKeys(query[0], ['name', 'icon', 'color', 'id']));
         });
         it('query by substring works', async () => {
-            const query = await entStateDB.query({ ...empty('READ'), name: 'up' });
+            const query = await entStateDB.query({ ...empty('READ'), name: 'dup' });
             expect(query).toHaveLength(1);
             expect(query[0]).toEqual({
                 id: '56d9bf92f9be48771d6fe5b5',
@@ -169,7 +169,7 @@ describe('delete messages of states', () => {
             expect(haveNoAdditionalKeys(query[0], ['name', 'icon', 'color', 'id', 'description']));
         });
         it('query by substring works', async () => {
-            const query = await topicsDB.query({ ...empty('READ'), name: 'up' });
+            const query = await topicsDB.query({ ...empty('READ'), name: 'dup' });
             expect(query).toHaveLength(1);
             expect(query[0]).toEqual({
                 id: '56d9bf92f9be48771d6fe5b7',
@@ -221,7 +221,7 @@ describe('delete messages of states', () => {
             expect(haveNoAdditionalKeys(query[0], ['name', 'icon', 'color', 'id']));
         });
         it('query by substring works', async () => {
-            const query = await stateDB.query({ ...empty('READ'), name: 'up' });
+            const query = await stateDB.query({ ...empty('READ'), name: 'dup' });
             expect(query).toHaveLength(1);
             expect(query[0]).toEqual({
                 id: '56d9bf92f9be48771d6fe5b6',
