@@ -23,6 +23,29 @@ export function genericEntityConversion<T,
     return output as V;
 }
 
+export async function genericDelete<T>(
+    query: FilterQuery<T>,
+    id: string,
+    details: Collection,
+    logger?: (id: string, action: string, additional?: Record<string, any>) => Promise<void> | void,
+): Promise<string[]> {
+    let result;
+
+    try {
+        result = await details.deleteOne(query);
+    } catch (e) {
+        throw e;
+    }
+
+    if (result.deletedCount !== 1) {
+        throw new ClientFacingError('invalid entity ID');
+    }
+
+    if (logger) await logger(id, 'inserted');
+
+    return [id];
+}
+
 export async function genericCreate<T, V>(
     entity: T,
     mapper: (input: T) => V,

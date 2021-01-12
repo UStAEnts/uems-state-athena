@@ -7,7 +7,7 @@ import DeleteStateMessage = StateMessage.DeleteStateMessage;
 import UpdateStateMessage = StateMessage.UpdateStateMessage;
 import InternalState = StateResponse.InternalState;
 import { ClientFacingError } from "../error/ClientFacingError";
-import { genericCreate, genericEntityConversion, genericUpdate } from "./GenericDatabaseFunctions";
+import { genericCreate, genericDelete, genericEntityConversion, genericUpdate } from "./GenericDatabaseFunctions";
 
 type InDatabaseState = {
     _id: ObjectId,
@@ -80,8 +80,11 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
         }, this.log.bind(this))
     }
 
-    protected deleteImpl(remove: StateMessage.DeleteStateMessage): Promise<string[]> {
-        return this.defaultDelete(remove);
+    protected deleteImpl(remove: StateMessage.DeleteStateMessage, details: Collection): Promise<string[]> {
+        return genericDelete<InDatabaseState>({
+            _id: new ObjectId(remove.id),
+            type: 'state',
+        }, remove.id, details, this.log.bind(this));
     }
 
     protected async queryImpl(query: StateMessage.ReadStateMessage, details: Collection): Promise<InternalState[]> {

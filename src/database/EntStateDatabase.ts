@@ -7,7 +7,7 @@ import CreateEntStateMessage = EntStateMessage.CreateEntStateMessage;
 import DeleteEntStateMessage = EntStateMessage.DeleteEntStateMessage;
 import UpdateEntStateMessage = EntStateMessage.UpdateEntStateMessage;
 import InternalEntState = EntStateResponse.InternalEntState;
-import { genericCreate, genericEntityConversion, genericUpdate, stripUndefined } from "./GenericDatabaseFunctions";
+import { genericCreate, genericDelete, genericEntityConversion, genericUpdate, stripUndefined } from "./GenericDatabaseFunctions";
 
 type InDatabaseEntState = {
     _id: ObjectId,
@@ -81,8 +81,11 @@ export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, 
         }, this.log.bind(this))
     }
 
-    protected deleteImpl(remove: EntStateMessage.DeleteEntStateMessage): Promise<string[]> {
-        return this.defaultDelete(remove);
+    protected deleteImpl(remove: EntStateMessage.DeleteEntStateMessage, details: Collection): Promise<string[]> {
+        return genericDelete<InDatabaseEntState>({
+            _id: new ObjectId(remove.id),
+            type: 'ent',
+        }, remove.id, details, this.log.bind(this));
     }
 
     protected async queryImpl(query: EntStateMessage.ReadEntStateMessage, details: Collection): Promise<InternalEntState[]> {

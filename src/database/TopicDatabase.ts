@@ -2,7 +2,7 @@ import { Collection, Db, FilterQuery, ObjectID, ObjectId } from "mongodb";
 import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder";
 import { TopicMessage, TopicResponse } from "@uems/uemscommlib";
 import { ClientFacingError } from "../error/ClientFacingError";
-import { genericCreate, genericEntityConversion, genericUpdate } from "./GenericDatabaseFunctions";
+import { genericCreate, genericDelete, genericEntityConversion, genericUpdate } from "./GenericDatabaseFunctions";
 import ReadTopicMessage = TopicMessage.ReadTopicMessage;
 import CreateTopicMessage = TopicMessage.CreateTopicMessage;
 import DeleteTopicMessage = TopicMessage.DeleteTopicMessage;
@@ -86,8 +86,11 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
         }, this.log.bind(this));
     }
 
-    protected deleteImpl(remove: TopicMessage.DeleteTopicMessage): Promise<string[]> {
-        return this.defaultDelete(remove);
+    protected deleteImpl(remove: TopicMessage.DeleteTopicMessage, details: Collection): Promise<string[]> {
+        return genericDelete<InDatabaseTopic>({
+            _id: new ObjectId(remove.id),
+            type: 'topic',
+        }, remove.id, details, this.log.bind(this));
     }
 
     protected async queryImpl(query: TopicMessage.ReadTopicMessage, details: Collection): Promise<InternalTopic[]> {
