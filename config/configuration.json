@@ -1,0 +1,54 @@
+{
+  "message": {
+    "gateway": "gateway",
+    "request": "request",
+    "inbox": "athena_inbox",
+    "topics": [
+      "ents.details.*",
+      "states.details.*",
+      "topics.details.*"
+    ],
+    "options": {
+      "hostname": "rabbit-uems",
+      "port": 5672,
+      "username": "rdadmin",
+      "password": "5PeztA2*^wGETm8qce*9"
+    }
+  },
+  "database": {
+    "username": "root",
+    "password": "example",
+    "uri": "mongo",
+    "port": 27017,
+    "instance": {
+      "state": {
+        "server": "state-details",
+        "database": "state",
+        "collections": {
+          "details": "details",
+          "changelog": "changelog"
+        }
+      },
+      "topic": {
+        "server": "state-details",
+        "database": "state",
+        "collections": {
+          "details": "details",
+          "changelog": "changelog"
+        }
+      },
+      "ent": {
+        "server": "state-details",
+        "database": "state",
+        "collections": {
+          "details": "details",
+          "changelog": "changelog"
+        }
+      }
+    },
+    "settings": {
+      "authMechanism": "SCRAM-SHA-1",
+      "authSource": "admin"
+    }
+  }
+}
