@@ -3,9 +3,7 @@ import { StateDatabase } from "./database/StateDatabase";
 import { _ml } from "./logging/Log";
 import { GenericDatabase, RabbitNetworkHandler } from "@uems/micro-builder";
 import { EntStateDatabase } from "./database/EntStateDatabase";
-import { EntStateMessageValidator, MsgStatus, StateMessageValidator } from '@uems/uemscommlib'
-import { TopicValidators } from "@uems/uemscommlib/build/topic/TopicValidators";
-import TopicMessageValidator = TopicValidators.TopicMessageValidator;
+import { EntStateMessageValidator, MsgStatus, StateMessageValidator, TopicMessageValidator } from '@uems/uemscommlib'
 import { TopicDatabase } from "./database/TopicDatabase";
 import { ClientFacingError } from "./error/ClientFacingError";
 

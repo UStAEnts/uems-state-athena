@@ -6,9 +6,8 @@ import { StateDatabase } from "../../src/database/StateDatabase";
 import { TopicDatabase } from "../../src/database/TopicDatabase";
 import { EntStateDatabase } from "../../src/database/EntStateDatabase";
 import bind from "../../src/Binding";
-import { BaseSchema } from "@uems/uemscommlib/build/BaseSchema";
+import { BaseSchema, EntStateMessage, MsgStatus, StateMessage, TopicMessage } from "@uems/uemscommlib";
 import Intentions = BaseSchema.Intentions;
-import { EntStateMessage, MsgStatus, StateMessage, TopicMessage } from "@uems/uemscommlib";
 import UpdateEntStateMessage = EntStateMessage.UpdateEntStateMessage;
 import CreateEntStateMessage = EntStateMessage.CreateEntStateMessage;
 import UpdateStateMessage = StateMessage.UpdateStateMessage;
@@ -116,7 +115,7 @@ describe('create messages of states', () => {
                 expect(message.status).toEqual(MsgStatus.SUCCESS);
                 expect(message.result).toHaveLength(1);
 
-                const {_id, type, ...data} = INIT_DATA[1];
+                const { _id, type, ...data } = INIT_DATA[1];
                 expect(message.result[0]).toEqual({
                     ...data,
                     id: _id.toHexString(),
@@ -136,7 +135,7 @@ describe('create messages of states', () => {
                 expect(message.status).toEqual(MsgStatus.SUCCESS);
                 expect(message.result).toHaveLength(1);
 
-                const {_id, type, ...data} = INIT_DATA[1];
+                const { _id, type, ...data } = INIT_DATA[1];
                 expect(message.result[0]).toEqual({
                     ...data,
                     id: _id.toHexString(),
@@ -175,7 +174,7 @@ describe('create messages of states', () => {
                 expect(message.status).toEqual(MsgStatus.SUCCESS);
                 expect(message.result).toHaveLength(1);
 
-                const {_id, type, ...data} = INIT_DATA[2];
+                const { _id, type, ...data } = INIT_DATA[2];
                 expect(message.result[0]).toEqual({
                     ...data,
                     id: _id.toHexString(),
@@ -195,7 +194,7 @@ describe('create messages of states', () => {
                 expect(message.status).toEqual(MsgStatus.SUCCESS);
                 expect(message.result).toHaveLength(1);
 
-                const {_id, type, ...data} = INIT_DATA[2];
+                const { _id, type, ...data } = INIT_DATA[2];
                 expect(message.result[0]).toEqual({
                     ...data,
                     id: _id.toHexString(),
@@ -234,7 +233,7 @@ describe('create messages of states', () => {
                 expect(message.status).toEqual(MsgStatus.SUCCESS);
                 expect(message.result).toHaveLength(1);
 
-                const {_id, type, ...data} = INIT_DATA[0];
+                const { _id, type, ...data } = INIT_DATA[0];
                 expect(message.result[0]).toEqual({
                     ...data,
                     id: _id.toHexString(),
@@ -254,7 +253,7 @@ describe('create messages of states', () => {
                 expect(message.status).toEqual(MsgStatus.SUCCESS);
                 expect(message.result).toHaveLength(1);
 
-                const {_id, type, ...data} = INIT_DATA[0];
+                const { _id, type, ...data } = INIT_DATA[0];
                 expect(message.result[0]).toEqual({
                     ...data,
                     id: _id.toHexString(),

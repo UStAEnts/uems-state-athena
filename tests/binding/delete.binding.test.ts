@@ -6,9 +6,8 @@ import { StateDatabase } from "../../src/database/StateDatabase";
 import { TopicDatabase } from "../../src/database/TopicDatabase";
 import { EntStateDatabase } from "../../src/database/EntStateDatabase";
 import bind from "../../src/Binding";
-import { BaseSchema } from "@uems/uemscommlib/build/BaseSchema";
+import { BaseSchema, EntStateMessage, MsgStatus, StateMessage, TopicMessage } from "@uems/uemscommlib";
 import Intentions = BaseSchema.Intentions;
-import { EntStateMessage, MsgStatus, StateMessage, TopicMessage } from "@uems/uemscommlib";
 import UpdateEntStateMessage = EntStateMessage.UpdateEntStateMessage;
 import CreateEntStateMessage = EntStateMessage.CreateEntStateMessage;
 import UpdateStateMessage = StateMessage.UpdateStateMessage;
@@ -101,7 +100,7 @@ describe('create messages of states', () => {
                 expect(message.result).toHaveLength(1);
                 expect(message.result[0]).toEqual(stateID);
 
-                broker.emit('query', {...empty('READ')}, 'states.details.read', (read) => {
+                broker.emit('query', { ...empty('READ') }, 'states.details.read', (read) => {
                     expect(read).toHaveProperty('result');
                     expect(read).toHaveProperty('status');
 
@@ -124,7 +123,7 @@ describe('create messages of states', () => {
                 expect(message.status).toEqual(MsgStatus.FAIL);
                 expect(message.result).toHaveLength(1);
 
-                broker.emit('query', {...empty('READ')}, 'states.details.read', (read) => {
+                broker.emit('query', { ...empty('READ') }, 'states.details.read', (read) => {
                     expect(read).toHaveProperty('result');
                     expect(read).toHaveProperty('status');
 
@@ -151,7 +150,7 @@ describe('create messages of states', () => {
                 expect(message.result).toHaveLength(1);
                 expect(message.result[0]).toEqual(entID);
 
-                broker.emit('query', {...empty('READ')}, 'ents.details.read', (read) => {
+                broker.emit('query', { ...empty('READ') }, 'ents.details.read', (read) => {
                     expect(read).toHaveProperty('result');
                     expect(read).toHaveProperty('status');
 
@@ -174,7 +173,7 @@ describe('create messages of states', () => {
                 expect(message.status).toEqual(MsgStatus.FAIL);
                 expect(message.result).toHaveLength(1);
 
-                broker.emit('query', {...empty('READ')}, 'ents.details.read', (read) => {
+                broker.emit('query', { ...empty('READ') }, 'ents.details.read', (read) => {
                     expect(read).toHaveProperty('result');
                     expect(read).toHaveProperty('status');
 
@@ -201,7 +200,7 @@ describe('create messages of states', () => {
                 expect(message.result).toHaveLength(1);
                 expect(message.result[0]).toEqual(topicID);
 
-                broker.emit('query', {...empty('READ')}, 'topics.details.read', (read) => {
+                broker.emit('query', { ...empty('READ') }, 'topics.details.read', (read) => {
                     expect(read).toHaveProperty('result');
                     expect(read).toHaveProperty('status');
 
@@ -224,7 +223,7 @@ describe('create messages of states', () => {
                 expect(message.status).toEqual(MsgStatus.FAIL);
                 expect(message.result).toHaveLength(1);
 
-                broker.emit('query', {...empty('READ')}, 'topics.details.read', (read) => {
+                broker.emit('query', { ...empty('READ') }, 'topics.details.read', (read) => {
                     expect(read).toHaveProperty('result');
                     expect(read).toHaveProperty('status');
 

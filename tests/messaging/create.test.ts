@@ -1,7 +1,7 @@
 import { defaultAfterAll, defaultAfterEach, defaultBeforeAll, defaultBeforeEach, haveNoAdditionalKeys } from "../utilities/setup";
 import { EntStateDatabase } from "../../src/database/EntStateDatabase";
 import { Db, MongoClient, ObjectId } from "mongodb";
-import { BaseSchema } from "@uems/uemscommlib/build/BaseSchema";
+import { BaseSchema } from "@uems/uemscommlib";
 import { TopicDatabase } from "../../src/database/TopicDatabase";
 import { StateDatabase } from "../../src/database/StateDatabase";
 import Intentions = BaseSchema.Intentions;

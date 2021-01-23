@@ -9,7 +9,7 @@ import { defaultAfterAll, defaultAfterEach, defaultBeforeAll, defaultBeforeEach,
 import { EntStateDatabase } from "../../src/database/EntStateDatabase";
 import { TopicDatabase } from "../../src/database/TopicDatabase";
 import { StateDatabase } from "../../src/database/StateDatabase";
-import { BaseSchema } from "@uems/uemscommlib/build/BaseSchema";
+import { BaseSchema } from "@uems/uemscommlib";
 import Intentions = BaseSchema.Intentions;
 
 const empty = <T extends Intentions>(intention: T): { msg_intention: T, msg_id: 0, status: 0, userID: string } => ({
