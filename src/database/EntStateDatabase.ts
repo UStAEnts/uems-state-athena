@@ -52,9 +52,19 @@ export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, 
         // @ts-ignore
         super(_configuration, collections);
 
-        if (!this._details) throw new Error('failed to initialise database');
-        void this._details.createIndex({ name: 1, type: 1 }, { unique: true });
-        void this._details.createIndex({ name: 'text', description: 'text' });
+        const register = (details: Collection) => {
+            void details.createIndex({ name: 1, type: 1 }, { unique: true });
+            void details.createIndex({ name: 'text', description: 'text' });
+        };
+
+        if (this._details) {
+            register(this._details);
+        } else {
+            this.once('ready', () => {
+                if (!this._details) throw new Error('Details db was not initialised on ready');
+                register(this._details);
+            });
+        }
 
     }
 
