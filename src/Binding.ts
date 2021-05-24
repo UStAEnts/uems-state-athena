@@ -1,13 +1,22 @@
 import { constants } from "http2";
 import { StateDatabase } from "./database/StateDatabase";
 import { _ml } from "./logging/Log";
-import { GenericDatabase, RabbitNetworkHandler } from "@uems/micro-builder";
+import { GenericDatabase, RabbitNetworkHandler, tryApplyTrait } from "@uems/micro-builder/build/src";
 import { EntStateDatabase } from "./database/EntStateDatabase";
 import { EntStateMessageValidator, MsgStatus, StateMessageValidator, TopicMessageValidator } from '@uems/uemscommlib'
 import { TopicDatabase } from "./database/TopicDatabase";
 import { ClientFacingError } from "./error/ClientFacingError";
 
 const _b = _ml(__filename, 'binding');
+
+// @ts-ignore
+const requestTracker: ('success' | 'fail')[] & { save: (d: 'success' | 'fail') => void } = [];
+requestTracker.save = function save(d) {
+    if (requestTracker.length >= 50) requestTracker.shift();
+    requestTracker.push(d);
+    tryApplyTrait('successful', requestTracker.filter((e) => e === 'success').length);
+    tryApplyTrait('fail', requestTracker.filter((e) => e === 'fail').length);
+};
 
 async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: number, userID: string },
     DATABASE extends GenericDatabase<any, any, any, any, REPR>,
@@ -19,6 +28,7 @@ async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: n
 ) {
     if (!database) {
         _b.warn('query was received without a valid database connection');
+        requestTracker.save('fail');
         throw new Error('uninitialised database connection');
     }
 
@@ -51,6 +61,7 @@ async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: n
         _b.error('failed to query database for events', {
             error: e as unknown,
         });
+        requestTracker.save('fail');
 
         if (e instanceof ClientFacingError) {
             send({
@@ -90,6 +101,7 @@ async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: n
             userID: message.userID,
         } as RESPONSE);
     }
+    requestTracker.save(status === constants.HTTP_STATUS_BAD_REQUEST ? 'fail' : 'success');
 }
 
 const entValidator = new EntStateMessageValidator();
@@ -108,6 +120,7 @@ export default function bind(state: StateDatabase, ent: EntStateDatabase, topic:
 
         console.log(message, routingKey);
 
+        requestTracker.save('fail');
         send({
             msg_intention: message.msg_intention,
             msg_id: message.msg_id,
@@ -128,6 +141,7 @@ export default function bind(state: StateDatabase, ent: EntStateDatabase, topic:
             return executeGeneric(message, topic, send);
         }
 
+        requestTracker.save('fail');
         send({
             msg_intention: message.msg_intention,
             msg_id: message.msg_id,
@@ -148,6 +162,7 @@ export default function bind(state: StateDatabase, ent: EntStateDatabase, topic:
             return executeGeneric(message, topic, send);
         }
 
+        requestTracker.save('fail');
         send({
             msg_intention: message.msg_intention,
             msg_id: message.msg_id,
@@ -168,6 +183,7 @@ export default function bind(state: StateDatabase, ent: EntStateDatabase, topic:
             return executeGeneric(message, topic, send);
         }
 
+        requestTracker.save('fail');
         send({
             msg_intention: message.msg_intention,
             msg_id: message.msg_id,
