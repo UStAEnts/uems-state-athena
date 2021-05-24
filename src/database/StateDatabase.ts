@@ -1,5 +1,5 @@
 import { Collection, Db, FilterQuery, ObjectID, ObjectId } from "mongodb";
-import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder";
+import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder/build/src";
 import { StateMessage, StateResponse } from "@uems/uemscommlib";
 import ReadStateMessage = StateMessage.ReadStateMessage;
 import CreateStateMessage = StateMessage.CreateStateMessage;

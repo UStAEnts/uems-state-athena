@@ -1,5 +1,5 @@
 import { Collection, Db, FilterQuery, ObjectID, ObjectId } from "mongodb";
-import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder";
+import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder/build/src";
 import { TopicMessage, TopicResponse } from "@uems/uemscommlib";
 import { ClientFacingError } from "../error/ClientFacingError";
 import { genericCreate, genericDelete, genericEntityConversion, genericUpdate } from "./GenericDatabaseFunctions";

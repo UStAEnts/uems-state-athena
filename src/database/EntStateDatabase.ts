@@ -1,5 +1,5 @@
 import { Collection, Db, FilterQuery, ObjectID, ObjectId, UpdateQuery } from "mongodb";
-import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder";
+import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder/build/src";
 import { EntStateMessage, EntStateResponse } from "@uems/uemscommlib";
 import { ClientFacingError } from "../error/ClientFacingError";
 import ReadEntStateMessage = EntStateMessage.ReadEntStateMessage;

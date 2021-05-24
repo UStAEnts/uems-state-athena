@@ -1,7 +1,7 @@
 import { Db, MongoClient } from "mongodb";
 import { defaultAfterAll, defaultAfterEach, defaultBeforeAll, defaultBeforeEach } from "../utilities/setup";
 import { BindingBroker } from "../utilities/BindingBroker";
-import { RabbitNetworkHandler } from "@uems/micro-builder";
+import { RabbitNetworkHandler } from "@uems/micro-builder/build/src";
 import { StateDatabase } from "../../src/database/StateDatabase";
 import { TopicDatabase } from "../../src/database/TopicDatabase";
 import { EntStateDatabase } from "../../src/database/EntStateDatabase";
