@@ -9,7 +9,7 @@
       "topics.details.*"
     ],
     "options": {
-      "hostname": "rabbit-uems",
+      "hostname": "localhost",
       "port": 5672,
       "username": "rdadmin",
       "password": "5PeztA2*^wGETm8qce*9"
@@ -18,7 +18,7 @@
   "database": {
     "username": "root",
     "password": "example",
-    "uri": "mongo",
+    "uri": "localhost",
     "port": 27017,
     "instance": {
       "state": {

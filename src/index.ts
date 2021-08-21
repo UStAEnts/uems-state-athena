@@ -37,7 +37,7 @@ let database: StateDatabase | undefined;
 let entDatabase: EntStateDatabase | undefined;
 let configuration: z.infer<typeof ConfigurationSchema> | undefined;
 
-fs.readFile(path.join(__dirname, '..', '..', 'config', 'configuration.json'), { encoding: 'utf8' })
+fs.readFile(process.env.UEMS_ATHENA_CONFIG_LOCATION ?? path.join(__dirname, '..', '..', 'config', 'configuration.json'), { encoding: 'utf8' })
     .then((file) => {
         __.debug('loaded configuration file');
         tryApplyTrait('config', true);
