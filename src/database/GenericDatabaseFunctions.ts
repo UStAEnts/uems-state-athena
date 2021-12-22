@@ -57,7 +57,7 @@ export async function genericCreate<T, V>(
 
     try {
         result = await details.insertOne(mapper(entity));
-    } catch (e) {
+    } catch (e:any) {
         if (e.code === 11000) {
             if (duplicateHandler) await duplicateHandler(e);
 
@@ -106,7 +106,7 @@ export async function genericUpdate<T extends { id: string }, K extends keyof T>
     let result;
     try {
         result = await details.updateOne(filter, changes);
-    } catch (e) {
+    } catch (e:any) {
         if (e.code === 11000) {
             if (duplicateHandler) await duplicateHandler(e);
 
