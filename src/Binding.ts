@@ -1,11 +1,18 @@
-import { constants } from "http2";
-import { StateDatabase } from "./database/StateDatabase";
-import { _ml } from "./logging/Log";
-import { GenericDatabase, RabbitNetworkHandler, tryApplyTrait } from "@uems/micro-builder/build/src";
-import { EntStateDatabase } from "./database/EntStateDatabase";
-import { EntStateMessageValidator, MsgStatus, StateMessageValidator, TopicMessageValidator } from '@uems/uemscommlib'
-import { TopicDatabase } from "./database/TopicDatabase";
-import { ClientFacingError } from "./error/ClientFacingError";
+import {constants} from "http2";
+import {StateDatabase} from "./database/StateDatabase";
+import {_ml} from "./logging/Log";
+import {GenericDatabase, RabbitNetworkHandler, tryApplyTrait} from "@uems/micro-builder/build/src";
+import {EntStateDatabase} from "./database/EntStateDatabase";
+import {
+    DiscoveryMessage,
+    DiscoveryResponse,
+    EntStateMessageValidator,
+    MsgStatus,
+    StateMessageValidator,
+    TopicMessageValidator
+} from '@uems/uemscommlib'
+import {TopicDatabase} from "./database/TopicDatabase";
+import {ClientFacingError} from "./error/ClientFacingError";
 
 const _b = _ml(__filename, 'binding');
 
@@ -104,31 +111,108 @@ async function executeGeneric<MESSAGE extends { msg_intention: string, msg_id: n
     requestTracker.save(status === constants.HTTP_STATUS_BAD_REQUEST ? 'fail' : 'success');
 }
 
+
+async function discover(
+    message: DiscoveryMessage.DiscoverMessage,
+    database: { type: 'state', database: StateDatabase } | { type: 'ent', database: EntStateDatabase } | { type: 'topic', database: TopicDatabase },
+    send: (res: DiscoveryResponse.DiscoveryDeleteResponse) => void,
+) {
+    const result: DiscoveryResponse.DiscoverResponse = {
+        userID: message.userID,
+        status: MsgStatus.SUCCESS,
+        msg_id: message.msg_id,
+        msg_intention: 'READ',
+        restrict: 0,
+        modify: 0,
+    };
+
+    if (['state', 'ent', 'topic'].includes(message.assetType)) {
+        result.modify = (await database.database.query({
+            msg_id: message.msg_id,
+            msg_intention: 'READ',
+            status: 0,
+            userID: 'anonymous',
+            id: message.assetID,
+        })).length;
+    }
+
+    send(result);
+}
+
+
+async function removeDiscover(
+    message: DiscoveryMessage.DeleteMessage,
+    database: { type: 'state', database: StateDatabase } | { type: 'ent', database: EntStateDatabase } | { type: 'topic', database: TopicDatabase },
+    send: (res: DiscoveryResponse.DiscoveryDeleteResponse) => void,
+) {
+    const result: DiscoveryResponse.DeleteResponse = {
+        userID: message.userID,
+        status: MsgStatus.SUCCESS,
+        msg_id: message.msg_id,
+        msg_intention: 'DELETE',
+        restrict: 0,
+        modified: 0,
+        successful: false,
+    };
+
+    if (['state', 'ent', 'topic'].includes(message.assetType)) {
+        try {
+            result.modified = (await database.database.delete({
+                msg_id: message.msg_id,
+                msg_intention: 'DELETE',
+                status: 0,
+                userID: 'anonymous',
+                id: message.assetID,
+            })).length;
+            result.successful = true;
+        } catch (e) {
+            result.successful = false;
+        }
+    }
+
+    send(result);
+}
+
+
 const entValidator = new EntStateMessageValidator();
 const stateValidator = new StateMessageValidator();
 const topicValidator = new TopicMessageValidator();
 
 export default function bind(state: StateDatabase, ent: EntStateDatabase, topic: TopicDatabase, broker: RabbitNetworkHandler<any, any, any, any, any, any>): void {
     broker.on('query', async (message, send, routingKey) => {
-        if (routingKey.startsWith("ents.") && await entValidator.validate(message)) {
-            return executeGeneric(message, ent, send);
-        } else if (routingKey.startsWith("states.") && await stateValidator.validate(message)) {
-            return executeGeneric(message, state, send);
-        } else if (routingKey.startsWith("topics.") && await topicValidator.validate(message)) {
-            return executeGeneric(message, topic, send);
+        if (routingKey === 'states.details.discover') {
+            await discover(message, {type: 'state', database: state}, send);
+        } else if (routingKey === 'ents.details.discover') {
+            await discover(message, {type: 'ent', database: ent}, send);
+        } else if (routingKey === 'topics.details.discover') {
+            await discover(message, {type: 'topic', database: topic}, send);
+        } else if (routingKey === 'states.details.delete') {
+            await removeDiscover(message, {type: 'state', database: state}, send);
+        } else if (routingKey === 'ents.details.delete') {
+            await removeDiscover(message, {type: 'ent', database: ent}, send);
+        } else if (routingKey === 'topics.details.delete') {
+            await removeDiscover(message, {type: 'topic', database: topic}, send);
+        } else {
+            if (routingKey.startsWith("ents.") && await entValidator.validate(message)) {
+                return executeGeneric(message, ent, send);
+            } else if (routingKey.startsWith("states.") && await stateValidator.validate(message)) {
+                return executeGeneric(message, state, send);
+            } else if (routingKey.startsWith("topics.") && await topicValidator.validate(message)) {
+                return executeGeneric(message, topic, send);
+            }
+
+            console.log(message, routingKey);
+
+            requestTracker.save('fail');
+            send({
+                msg_intention: message.msg_intention,
+                msg_id: message.msg_id,
+                status: MsgStatus.FAIL,
+                result: ['Invalid key or message'],
+            });
+
+            return undefined;
         }
-
-        console.log(message, routingKey);
-
-        requestTracker.save('fail');
-        send({
-            msg_intention: message.msg_intention,
-            msg_id: message.msg_id,
-            status: MsgStatus.FAIL,
-            result: ['Invalid key or message'],
-        });
-
-        return undefined;
     });
     _b.debug('bound [query] event [state]');
 
