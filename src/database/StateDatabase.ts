@@ -1,13 +1,13 @@
-import { Collection, Db, FilterQuery, ObjectID, ObjectId } from "mongodb";
-import { GenericMongoDatabase, MongoDBConfiguration } from "@uems/micro-builder/build/src";
-import { StateMessage, StateResponse } from "@uems/uemscommlib";
+import {Collection, Db, FilterQuery, ObjectID, ObjectId} from "mongodb";
+import {GenericMongoDatabase, MongoDBConfiguration} from "@uems/micro-builder/build/src";
+import {StateMessage, StateResponse} from "@uems/uemscommlib";
 import ReadStateMessage = StateMessage.ReadStateMessage;
 import CreateStateMessage = StateMessage.CreateStateMessage;
 import DeleteStateMessage = StateMessage.DeleteStateMessage;
 import UpdateStateMessage = StateMessage.UpdateStateMessage;
 import InternalState = StateResponse.InternalState;
-import { ClientFacingError } from "../error/ClientFacingError";
-import { genericCreate, genericDelete, genericEntityConversion, genericUpdate } from "./GenericDatabaseFunctions";
+import {ClientFacingError} from "../error/ClientFacingError";
+import {genericCreate, genericDelete, genericEntityConversion, genericUpdate} from "./GenericDatabaseFunctions";
 
 type InDatabaseState = {
     _id: ObjectId,
@@ -53,8 +53,8 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
         super(_configuration, collections);
 
         const register = (details: Collection) => {
-            void details.createIndex({ name: 1, type: 1 }, { unique: true });
-            void details.createIndex({ name: 'text', description: 'text' });
+            void details.createIndex({name: 1, type: 1}, {unique: true});
+            void details.createIndex({name: 'text', description: 'text'});
         };
 
         if (this._details) {
@@ -75,10 +75,16 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
         };
 
         if (request.id) {
-            obj._id = new ObjectID(request.id);
+            if (typeof (request.id) === 'string') {
+                obj._id = new ObjectID(request.id);
+            } else {
+                obj._id = {
+                    $in: request.id.map((e) => new ObjectID(e)),
+                };
+            }
         }
 
-        if (request.name) obj.$text = { $search: request.name };
+        if (request.name) obj.$text = {$search: request.name};
 
         return Object.fromEntries(Object.entries(obj)
             .filter(([, value]) => value !== undefined));
@@ -102,7 +108,7 @@ export class StateDatabase extends GenericMongoDatabase<ReadStateMessage, Create
     }
 
     protected updateImpl(update: StateMessage.UpdateStateMessage, details: Collection): Promise<string[]> {
-        return genericUpdate(update, ['name', 'icon', 'color'], details, { type: 'state' }, () => {
+        return genericUpdate(update, ['name', 'icon', 'color'], details, {type: 'state'}, () => {
             throw new ClientFacingError('cannot update to existing name');
         });
     }
