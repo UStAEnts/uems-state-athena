@@ -76,7 +76,13 @@ export class EntStateDatabase extends GenericMongoDatabase<ReadEntStateMessage, 
         });
 
         if (request.id) {
-            obj._id = new ObjectID(request.id);
+            if (typeof (request.id) === 'string') {
+                obj._id = new ObjectID(request.id);
+            } else {
+                obj._id = {
+                    $in: request.id.map((e) => new ObjectID(e)),
+                };
+            }
         }
 
         if (request.name) obj.$text = { $search: request.name };
