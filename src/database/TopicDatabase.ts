@@ -83,7 +83,13 @@ export class TopicDatabase extends GenericMongoDatabase<ReadTopicMessage, Create
         if (text.length > 0) obj.$text = { $search: text.join(' ') };
 
         if (request.id) {
-            obj._id = new ObjectID(request.id);
+            if (typeof (request.id) === 'string') {
+                obj._id = new ObjectID(request.id);
+            } else {
+                obj._id = {
+                    $in: request.id.map((e) => new ObjectID(e)),
+                };
+            }
         }
 
         return Object.fromEntries(Object.entries(obj)
